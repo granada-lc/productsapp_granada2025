@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'sign_up_screen.dart';
+import 'create_product_screen.dart';
 
 void main() {
   runApp(const MyApp());
