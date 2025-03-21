@@ -64,7 +64,7 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pink[100],
+        backgroundColor: Color.fromRGBO(244, 194, 194, 1.0),
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(

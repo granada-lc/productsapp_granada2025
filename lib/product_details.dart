@@ -123,9 +123,7 @@ class SizeSelector extends StatelessWidget {
       ),
     );
   }
-}
-
-// Action Buttons Widget
+}// Action Buttons Widget
 class ActionButtons extends StatelessWidget {
   const ActionButtons({super.key});
 
@@ -141,7 +139,7 @@ class ActionButtons extends StatelessWidget {
               icon: const Icon(Icons.shopping_cart, color: Colors.black), // Cart icon
               label: const Text("ADD TO CART", style: TextStyle(color: Colors.black)), // Button text
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.yellow, // Button color
+                disabledBackgroundColor: Color.fromRGBO(251, 248, 204, 1.0), // Explicitly set disabled color
                 padding: const EdgeInsets.all(12), // Padding inside button
               ),
             ),
@@ -150,9 +148,9 @@ class ActionButtons extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: null, // Disabled for now
-              child: const Text("BUY NOW"), // Button text
+              child: const Text("BUY NOW", style: TextStyle(color: Colors.white)), // Button text
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 212, 71, 118), // Button color
+                disabledBackgroundColor: Color.fromRGBO(240, 112, 152, 1.0), // Explicitly set disabled color
                 padding: const EdgeInsets.all(12), // Padding inside button
               ),
             ),
