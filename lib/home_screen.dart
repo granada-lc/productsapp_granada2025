@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'product_details.dart';
 import 'product.dart';
 import 'create_product_screen.dart';
+import 'user_preference.dart';
+import 'app_state.dart';
 
 // Category Button Widget
 class CategoryButton extends StatelessWidget {
@@ -103,6 +105,10 @@ class ProductCard extends StatelessWidget {
               title: const Text('User Preferences'),
               onTap: () {
                 // Implement User Preferences Navigation
+                Navigator.push(
+                  context,
+                  MaterialPageRoute (builder: (context) => const UserPreferencesScreen ()),
+                );
               },
             ),
           ],
