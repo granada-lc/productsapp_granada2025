@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'app_state.dart';
 
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});
@@ -12,17 +14,29 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  String _selectedCategory = 'Shoes'; // Default selected category
+  String _selectedCategory = 'Shoes'; // default key
   final List<String> _categories = ['Shoes', 'Clothing', 'Accessories'];
+
+  String _getLocalizedCategory(String key, bool isFilipino) {
+    final map = {
+      'Shoes': isFilipino ? 'Sapatos' : 'Shoes',
+      'Clothing': isFilipino ? 'Damit' : 'Clothing',
+      'Accessories': isFilipino ? 'Mga Accessorya' : 'Accessories',
+    };
+    return map[key] ?? key;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+    final isFilipino = appState.language == AppLanguage.filipino;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pink[100],
-        title: const Text(
-          "Create New Product",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        title: Text(
+          isFilipino ? "Lumikha ng Bagong Produkto" : "Create New Product",
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -34,38 +48,38 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product Name
-            const Text("Product Name", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(isFilipino ? "Pangalan ng Produkto" : "Product Name",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Enter product name",
+                border: const OutlineInputBorder(),
+                hintText: isFilipino ? "Ilagay ang pangalan ng produkto" : "Enter product name",
                 filled: true,
                 fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 15),
 
-            // Price
-            const Text("Price", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(isFilipino ? "Presyo" : "Price",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             TextField(
               controller: _priceController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 prefixText: "₱",
-                border: OutlineInputBorder(),
-                hintText: "Enter price",
+                border: const OutlineInputBorder(),
+                hintText: isFilipino ? "Ilagay ang presyo" : "Enter price",
                 filled: true,
                 fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 15),
 
-            // Category
-            const Text("Category", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(isFilipino ? "Kategorya" : "Category",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -81,7 +95,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                 items: _categories.map((String category) {
                   return DropdownMenuItem<String>(
                     value: category,
-                    child: Text(category),
+                    child: Text(_getLocalizedCategory(category, isFilipino)),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
@@ -93,26 +107,24 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             ),
             const SizedBox(height: 15),
 
-            // Description
-            const Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(isFilipino ? "Paglalarawan" : "Description",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             TextField(
               controller: _descriptionController,
               maxLines: 4,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Product Description here ...",
+                border: const OutlineInputBorder(),
+                hintText: isFilipino ? "Ilagay ang paglalarawan ng produkto..." : "Product Description here ...",
                 filled: true,
                 fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 20),
 
-            // Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Cancel Button
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context),
@@ -122,14 +134,13 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                         borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    child: const Text(
-                      "CANCEL",
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    child: Text(
+                      isFilipino ? "KANSELA" : "CANCEL",
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Save Button
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -141,9 +152,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                         borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    child: const Text(
-                      "SAVE",
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    child: Text(
+                      isFilipino ? "ISAVE" : "SAVE",
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

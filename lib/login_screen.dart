@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-
+import 'package:provider/provider.dart';
+import 'app_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +14,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+    final isFilipino = appState.language == AppLanguage.filipino;
+
+    final loginText = isFilipino ? "MAG-LOGIN" : "LOGIN";
+    final usernameHint = isFilipino ? "Pangalan ng Gumagamit" : "Username";
+    final passwordHint = isFilipino ? "Password" : "Password";
+    final forgotPassword = isFilipino ? "Nakalimutan ang Password?" : "Forgot Password?";
+    final loginButton = isFilipino ? "MAG-LOGIN" : "LOGIN";
+    final noAccount = isFilipino ? "Wala ka pang account? " : "Don't have an account? ";
+    final signUpText = isFilipino ? "Mag-sign Up" : "Sign Up";
+
     return Scaffold(
       backgroundColor: Colors.yellow[100],
       body: Padding(
@@ -21,17 +32,17 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "LOGIN",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Text(
+              loginText,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            
+
             // Username Field
             TextField(
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.person),
-                hintText: "Username",
+                hintText: usernameHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -46,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: _obscureText,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.lock),
-                hintText: "Password",
+                hintText: passwordHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -69,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {},
-                child: const Text("Forgot Password?", style: TextStyle(color: Colors.blue)),
+                child: Text(forgotPassword, style: const TextStyle(color: Colors.blue)),
               ),
             ),
             const SizedBox(height: 10),
@@ -88,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, '/home');
                 },
-                child: const Text("LOGIN", style: TextStyle(color: Colors.white, fontSize: 18)),
+                child: Text(loginButton, style: const TextStyle(color: Colors.white, fontSize: 18)),
               ),
             ),
             const SizedBox(height: 20),
@@ -97,14 +108,14 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Don't have an account? "),
+                Text(noAccount),
                 GestureDetector(
                   onTap: () {
                     Navigator.pushNamed(context, '/signup');
                   },
-                  child: const Text(
-                    "Sign Up",
-                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  child: Text(
+                    signUpText,
+                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

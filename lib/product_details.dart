@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'product.dart';
+import 'app_state.dart';
 
 // Product Image Widget
 class ProductImage extends StatelessWidget {
@@ -80,11 +82,15 @@ class ColorSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final appState = Provider.of<AppState>(context);
+     final isFilipino = appState.language == AppLanguage.filipino;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Add spacing
       child: Row(
         children: [
-          const Text("Colors  "), // Label
+         Text(isFilipino ? "Kulay  " : "Colors"), // Label
           ...[Colors.blue, Colors.yellow, Colors.pink].map(
             (color) => Container(
               margin: const EdgeInsets.only(right: 8), // Space between colors
@@ -108,11 +114,15 @@ class SizeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
+     final appState = Provider.of<AppState>(context);
+     final isFilipino = appState.language == AppLanguage.filipino;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Add spacing
       child: Row(
         children: [
-          const Text("Size  "), // Label
+          Text(isFilipino ? "Laki  " : "Size  "), // Label
           ...["S", "M", "L"].map(
             (size) => Padding(
               padding: const EdgeInsets.only(right: 8), // Space between sizes
@@ -123,12 +133,18 @@ class SizeSelector extends StatelessWidget {
       ),
     );
   }
-}// Action Buttons Widget
+}
+
+// Action Buttons Widget
 class ActionButtons extends StatelessWidget {
   const ActionButtons({super.key});
 
   @override
   Widget build(BuildContext context) {
+    
+     final appState = Provider.of<AppState>(context);
+     final isFilipino = appState.language == AppLanguage.filipino;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // Add spacing
       child: Row(
@@ -137,7 +153,10 @@ class ActionButtons extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: null, // Disabled for now
               icon: const Icon(Icons.shopping_cart, color: Colors.black), // Cart icon
-              label: const Text("ADD TO CART", style: TextStyle(color: Colors.black)), // Button text
+              label: Text(
+              isFilipino ? "IDAGDAG SA CART" : "ADD TO CART",
+              style: const TextStyle(color: Colors.black),
+            ), // Button text
               style: ElevatedButton.styleFrom(
                 disabledBackgroundColor: Color.fromRGBO(251, 248, 204, 1.0), // Explicitly set disabled color
                 padding: const EdgeInsets.all(12), // Padding inside button
@@ -148,7 +167,10 @@ class ActionButtons extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: null, // Disabled for now
-              child: const Text("BUY NOW", style: TextStyle(color: Colors.white)), // Button text
+              child: Text(
+              isFilipino ? "BILHIN NGAYON" : "BUY NOW",
+              style: const TextStyle(color: Colors.white),
+            ), // Button text
               style: ElevatedButton.styleFrom(
                 disabledBackgroundColor: Color.fromRGBO(240, 112, 152, 1.0), // Explicitly set disabled color
                 padding: const EdgeInsets.all(12), // Padding inside button
@@ -168,6 +190,10 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+     final appState = Provider.of<AppState>(context);
+     final isFilipino = appState.language == AppLanguage.filipino;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.pink[100], // App bar color
@@ -176,7 +202,9 @@ class DetailScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black), // Back button
           onPressed: () => Navigator.pop(context), // Go back
         ),
-        title: const Text("Detail Product", style: TextStyle(color: Colors.black)), // Title
+       title: Text(isFilipino ? "Detalye ng Produkto" : "Detail Product",
+        style: const TextStyle(color: Colors.black)),
+        // Title
         centerTitle: true, // Center title
       ),
       body: Column(

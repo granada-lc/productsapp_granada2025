@@ -10,25 +10,26 @@ class UserPreferencesScreen extends StatefulWidget {
 }
 
 class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
-  late String selectedTheme;
-  late String selectedLanguage;
+  late AppTheme selectedTheme;
+  late AppLanguage selectedLanguage;
 
   @override
   void initState() {
     super.initState();
     final appState = Provider.of<AppState>(context, listen: false);
-    selectedTheme = appState.theme == AppTheme.dark ? 'Dark' : 'Light';
-    selectedLanguage = appState.language == AppLanguage.filipino ? 'Filipino' : 'English';
+    selectedTheme = appState.theme;
+    selectedLanguage = appState.language;
   }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        leading: BackButton(color: Colors.black),
-        backgroundColor: const Color(0xFFFFC1C1),
+        leading: const BackButton(color: Colors.black),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         title: Text(
           appState.language == AppLanguage.english ? 'User Preferences' : 'Mga Kagustuhan',
@@ -48,61 +49,86 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(appState.language == AppLanguage.english ? 'Choose Theme' : 'Piliin ang Tema',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: selectedTheme,
-                items: ['Dark', 'Light'].map((theme) {
-                  return DropdownMenuItem(value: theme, child: Text(theme));
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedTheme = value!;
-                  });
-                },
-              ),
+              _buildLabel(appState.language == AppLanguage.english ? 'Choose Theme' : 'Piliin ang Tema'),
+              _buildThemeDropdown(),
               const SizedBox(height: 20),
-              Text(appState.language == AppLanguage.english ? 'Choose Language' : 'Piliin ang Wika',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: selectedLanguage,
-                items: ['English', 'Filipino'].map((lang) {
-                  return DropdownMenuItem(value: lang, child: Text(lang));
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedLanguage = value!;
-                  });
-                },
-              ),
+              _buildLabel(appState.language == AppLanguage.english ? 'Choose Language' : 'Piliin ang Wika'),
+              _buildLanguageDropdown(),
               const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF729F)),
-                    child: const Text('CANCEL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      appState.updatePreferences(
-                        theme: selectedTheme == 'Dark' ? AppTheme.dark : AppTheme.light,
-                        language: selectedLanguage == 'Filipino' ? AppLanguage.filipino : AppLanguage.english,
-                      );
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF729F)),
-                    child: const Text('SAVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+              _buildButtons(appState),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+    );
+  }
+
+  Widget _buildThemeDropdown() {
+    return DropdownButtonFormField<AppTheme>(
+      value: selectedTheme,
+      items: AppTheme.values.map((theme) {
+        return DropdownMenuItem(
+          value: theme,
+          child: Text(theme == AppTheme.roseBud ? 'Rose Bud' : 'Sandwisp'),
+        );
+      }).toList(),
+      onChanged: (value) {
+        if (value != null) {
+          setState(() {
+            selectedTheme = value;
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildLanguageDropdown() {
+    return DropdownButtonFormField<AppLanguage>(
+      value: selectedLanguage,
+      items: AppLanguage.values.map((lang) {
+        return DropdownMenuItem(
+          value: lang,
+          child: Text(lang == AppLanguage.filipino ? 'Filipino' : 'English'),
+        );
+      }).toList(),
+      onChanged: (value) {
+        if (value != null) {
+          setState(() {
+            selectedLanguage = value;
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildButtons(AppState appState) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF729F)),
+          child: const Text('CANCEL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            appState.updatePreferences(
+              theme: selectedTheme,
+              language: selectedLanguage,
+            );
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF729F)),
+          child: const Text('SAVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ],
     );
   }
 }
