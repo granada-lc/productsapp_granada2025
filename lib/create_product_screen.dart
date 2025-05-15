@@ -1,15 +1,21 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'category_service.dart';
+import 'config.dart';
 import 'app_state.dart';
 
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});
 
   @override
-  _CreateProductScreenState createState() => _CreateProductScreenState();
+  State<CreateProductScreen> createState() => _CreateProductScreenState();
 }
 
 class AddProductService {
@@ -18,27 +24,23 @@ class AddProductService {
     required String description,
     required String price,
     required int categoryId,
+    required int userId,
+    File? image,
   }) async {
-    final url = Uri.parse('http://127.0.0.1:8000/api/products');
+    final url = Uri.parse('${AppConfig.baseUrl}/api/products');
+    var request = http.MultipartRequest('POST', url);
+    request.fields['name'] = name;
+    request.fields['description'] = description;
+    request.fields['price'] = price;
+    request.fields['category_id'] = categoryId.toString();
+    request.fields['user_id'] = userId.toString();
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode({
-        'name': name,
-        'description': description,
-        'price': price,
-        'category_id': categoryId,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      return true;
-    } else {
-      throw Exception('Failed to add product');
+    if (image != null) {
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
     }
+
+    final response = await request.send();
+    return response.statusCode == 201;
   }
 }
 
@@ -47,16 +49,40 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  String _selectedCategory = 'Shoes';
-  final List<String> _categories = ['Shoes', 'Clothing', 'Accessories'];
+  File? _selectedImage;
+  List<Map<String, dynamic>> _categories = [];
+  String? _selectedCategoryId;
+  bool _loadingCategories = true;
 
-  String _getLocalizedCategory(String key, bool isFilipino) {
-    final map = {
-      'Shoes': isFilipino ? 'Sapatos' : 'Shoes',
-      'Clothing': isFilipino ? 'Damit' : 'Clothing',
-      'Accessories': isFilipino ? 'Mga Accessorya' : 'Accessories',
-    };
-    return map[key] ?? key;
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await CategoryService.getCategories();
+      setState(() {
+        _categories = categories;
+        _selectedCategoryId = categories.isNotEmpty
+            ? categories.first['id'].toString()
+            : null;
+      });
+    } catch (e) {
+      // Handle error here
+    } finally {
+      setState(() => _loadingCategories = false);
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
   }
 
   @override
@@ -66,7 +92,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        backgroundColor: Colors.pink,
         title: Text(
           isFilipino ? "Lumikha ng Bagong Produkto" : "Create New Product",
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -76,179 +102,187 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(isFilipino ? "Pangalan ng Produkto" : "Product Name",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                hintText: isFilipino
-                    ? "Ilagay ang pangalan ng produkto"
-                    : "Enter product name",
-                filled: true,
-                fillColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Text(isFilipino ? "Presyo" : "Price",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                prefixText: "₱",
-                border: const OutlineInputBorder(),
-                hintText: isFilipino ? "Ilagay ang presyo" : "Enter price",
-                filled: true,
-                fillColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Text(isFilipino ? "Kategorya" : "Category",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black45),
-                borderRadius: BorderRadius.circular(5),
-                color: Colors.white,
-              ),
-              child: DropdownButton<String>(
-                value: _selectedCategory,
-                isExpanded: true,
-                underline: const SizedBox(),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(_getLocalizedCategory(category, isFilipino)),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-              ),
-            ),
-            const SizedBox(height: 15),
-            Text(isFilipino ? "Paglalarawan" : "Description",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                hintText: isFilipino
-                    ? "Ilagay ang paglalarawan ng produkto..."
-                    : "Product Description here ...",
-                filled: true,
-                fillColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow[600],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    child: Text(
-                      isFilipino ? "KANSELA" : "CANCEL",
-                      style: const TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold),
-                    ),
+      body: _loadingCategories
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ListView(
+                children: [
+                  Text(
+                    isFilipino ? "Larawan ng Produkto" : "Product Image",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (_nameController.text.isEmpty ||
-                          _descriptionController.text.isEmpty ||
-                          _priceController.text.isEmpty ||
-                          _selectedCategory.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(isFilipino
-                                ? "Pakitapos ang lahat ng fields."
-                                : "Please complete all fields."),
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: _selectedImage == null
+                        ? Container(
+                            height: 100,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.add_a_photo, size: 40),
+                          )
+                        : Image.file(
+                            _selectedImage!,
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
                           ),
-                        );
-                        return;
-                      }
-
-                      try {
-                        final categoryIdMap = {
-                          'Shoes': 1,
-                          'Clothing': 2,
-                          'Accessories': 3,
-                        };
-
-                        final categoryId = categoryIdMap[_selectedCategory];
-
-                        if (categoryId == null) {
-                          throw Exception('Invalid category selected');
-                        }
-
-                        await AddProductService.addProduct(
-                          name: _nameController.text,
-                          description: _descriptionController.text,
-                          price: _priceController.text,
-                          categoryId: categoryId,
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(isFilipino
-                                ? "Matagumpay na naidagdag ang produkto!"
-                                : "Product added successfully!"),
-                          ),
-                        );
-
-                        Navigator.pop(context);
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(isFilipino
-                                ? "Nabigo ang pagdaragdag ng produkto."
-                                : "Failed to add product."),
-                          ),
-                        );
-                      }
+                  ),
+                  const SizedBox(height: 20),
+                  _buildLabeledField(
+                    isFilipino ? "Pangalan ng Produkto" : "Product Name",
+                    _nameController,
+                    isFilipino ? "Ilagay ang pangalan ng produkto" : "Enter product name",
+                  ),
+                  const SizedBox(height: 15),
+                  _buildLabeledField(
+                    isFilipino ? "Presyo" : "Price",
+                    _priceController,
+                    isFilipino ? "Ilagay ang presyo" : "Enter price",
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    isFilipino ? "Kategorya" : "Category",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 5),
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategoryId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(border: OutlineInputBorder()),
+                    items: _categories.map((cat) {
+                      return DropdownMenuItem<String>(
+                        value: cat['id'].toString(),
+                        child: Text(cat['name']),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategoryId = value;
+                      });
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    child: Text(
-                      isFilipino ? "ISAVE" : "SAVE",
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 15),
+                  _buildLabeledField(
+                    isFilipino ? "Paglalarawan" : "Description",
+                    _descriptionController,
+                    isFilipino
+                        ? "Ilagay ang paglalarawan ng produkto..."
+                        : "Enter product description...",
+                    maxLines: 4,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellow[700],
+                          ),
+                          child: Text(isFilipino ? "KANSELA" : "CANCEL"),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _submitProduct,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.pink,
+                          ),
+                          child: Text(isFilipino ? "ISAVE" : "SAVE"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
+  }
+
+  Widget _buildLabeledField(String label, TextEditingController controller, String hint,
+      {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: const OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submitProduct() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final isFilipino = appState.language == AppLanguage.filipino;
+
+    if (_nameController.text.isEmpty ||
+        _priceController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        _selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              isFilipino ? "Pakitapos ang lahat ng fields." : "Please complete all fields."),
+        ),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not logged in.")),
+      );
+      return;
+    }
+
+    try {
+      final success = await AddProductService.addProduct(
+        name: _nameController.text,
+        description: _descriptionController.text,
+        price: _priceController.text,
+        categoryId: int.parse(_selectedCategoryId!),
+        userId: userId,
+        image: _selectedImage,
+      );
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(isFilipino
+                  ? "Matagumpay na naidagdag ang produkto!"
+                  : "Product added successfully!")),
+        );
+        Navigator.pop(context);
+      } else {
+        throw Exception("Server error");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(isFilipino
+                ? "Nabigo ang pagdaragdag ng produkto."
+                : "Failed to add product.")),
+      );
+    }
   }
 }

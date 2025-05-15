@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'product.dart';
 import 'app_state.dart';
+import 'home_screen.dart';
+import 'config.dart';
+
 
 // Product Image Widget
 class ProductImage extends StatelessWidget {
