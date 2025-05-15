@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'app_state.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,7 +12,62 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
+  bool _isLoading = false;
+
+  Future<void> _login(BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final isFilipino = appState.language == AppLanguage.filipino;
+
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isFilipino
+              ? "Pakitapos ang lahat ng fields."
+              : "Please complete all fields."),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/api/auth/login'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'username': _usernameController.text,
+          'password': _passwordController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isFilipino
+                ? "Maling kredensyal."
+                : "Invalid credentials."),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isFilipino
+              ? "May problema sa koneksyon."
+              : "Connection error."),
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Username Field
             TextField(
+              controller: _usernameController,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.person),
                 hintText: usernameHint,
@@ -54,6 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Password Field
             TextField(
+              controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.lock),
@@ -75,7 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 10),
 
-            // Forgot Password
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
@@ -85,7 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 10),
 
-            // Login Button
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -96,15 +153,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/home');
-                },
-                child: Text(loginButton, style: const TextStyle(color: Colors.white, fontSize: 18)),
+                onPressed: _isLoading ? null : () => _login(context),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        loginButton,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                      ),
               ),
             ),
             const SizedBox(height: 20),
 
-            // Sign Up Link
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

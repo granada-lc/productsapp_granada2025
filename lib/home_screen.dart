@@ -4,6 +4,7 @@ import 'product_details.dart';
 import 'product.dart';
 import 'create_product_screen.dart';
 import 'user_preference.dart';
+import 'login_screen.dart';
 import 'app_state.dart';
 
 // Category Button Widget
@@ -73,6 +74,7 @@ class HomeScreen extends StatelessWidget {
     final drawerTitle = isFilipino ? "Menu" : "Menu";
     final createProduct = isFilipino ? "Lumikha ng Bagong Produkto" : "Create New Product";
     final preferences = isFilipino ? "Mga Kagustuhan ng Gumagamit" : "User Preferences";
+     final logout = isFilipino ? "Mag Logout" : "Logout";
     final mostPopular = isFilipino ? "Pinaka Sikat" : "Most Popular";
 
     final categories = isFilipino
@@ -95,39 +97,51 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.pink[100]),
-              child: Text(
-                drawerTitle,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: Text(createProduct),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CreateProductScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text(preferences),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const UserPreferencesScreen()),
-                );
-              },
-            ),
-          ],
+  child: ListView(
+    padding: EdgeInsets.zero,
+    children: [
+      DrawerHeader(
+        decoration: BoxDecoration(color: Colors.pink[100]),
+        child: Text(
+          drawerTitle,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
       ),
+      ListTile(
+        leading: const Icon(Icons.add),
+        title: Text(createProduct),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateProductScreen()),
+          );
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.settings),
+        title: Text(preferences),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const UserPreferencesScreen()),
+          );
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.logout),
+        title: Text(logout),
+        onTap: () {
+          // Add your logout logic here (if any, like clearing user session)
+          
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        },
+      ),
+    ],
+  ),
+),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
