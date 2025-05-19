@@ -14,7 +14,6 @@ import 'user_preference.dart';
 import 'app_state.dart';
 import 'package:productapp_granada2025/models/Products.dart' as ModelProducts;
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -58,12 +57,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadProducts() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final raw = jsonData['data'] ?? jsonData;
         setState(() {
-          allProducts = List<Product>.from(raw.map((item) => Product.fromJson(item)));
+          allProducts =
+              List<Product>.from(raw.map((item) => Product.fromJson(item)));
           isLoading = false;
         });
       }
@@ -75,15 +76,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadCategories() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          categories = data.map<Map<String, dynamic>>((item) => {
-            'id': item['id'],
-            'name': item['name'],
-            'image_path': item['image_path'],
-          }).toList();
+          categories = data
+              .map<Map<String, dynamic>>((item) => {
+                    'id': item['id'],
+                    'name': item['name'],
+                    'image_path': item['image_path'],
+                  })
+              .toList();
         });
       }
     } catch (e) {
@@ -125,16 +129,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.yellow[100],
                 borderRadius: BorderRadius.circular(10),
                 image: DecorationImage(
-                  image: NetworkImage('${AppConfig.baseUrl}/storage/${product.imagePath}'),
+                  image: NetworkImage(
+                      '${AppConfig.baseUrl}/storage/${product.imagePath}'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(product.description, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          Text("₱${product.price}", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(product.name,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(product.description,
+              style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text("₱${product.price}",
+              style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -144,7 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isFilipino = appState.language == AppLanguage.filipino;
-    final backgroundColor = getThemeData(appState.theme).appBarTheme.backgroundColor;
+    final backgroundColor =
+        getThemeData(appState.theme).appBarTheme.backgroundColor;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -171,32 +180,43 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(backgroundImage: AssetImage("assets/profile.jpg"), radius: 30),
+                  CircleAvatar(
+                      backgroundImage: AssetImage("assets/profile.jpg"),
+                      radius: 30),
                   SizedBox(height: 10),
-                  Text(userName ?? "User Name", style: TextStyle(fontSize: 18, color: Colors.white)),
-                  Text(userEmail ?? "user@example.com", style: TextStyle(fontSize: 14, color: Colors.white70)),
+                  Text(userName ?? "User Name",
+                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                  Text(userEmail ?? "user@example.com",
+                      style: TextStyle(fontSize: 14, color: Colors.white70)),
                 ],
               ),
             ),
             ListTile(
               leading: Icon(Icons.add),
-              title: Text(isFilipino ? "Lumikha ng Bagong Produkto" : "Create New Product"),
+              title: Text(isFilipino
+                  ? "Lumikha ng Bagong Produkto"
+                  : "Create New Product"),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => CreateProductScreen()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => CreateProductScreen()));
               },
             ),
             ListTile(
               leading: Icon(Icons.settings),
-              title: Text(isFilipino ? "Mga Kagustuhan ng Gumagamit" : "User Preferences"),
+              title: Text(isFilipino
+                  ? "Mga Kagustuhan ng Gumagamit"
+                  : "User Preferences"),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => UserPreferencesScreen()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => UserPreferencesScreen()));
               },
             ),
             ListTile(
               leading: Icon(Icons.logout),
               title: Text(isFilipino ? "Mag Logout" : "Logout"),
               onTap: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (_) => LoginScreen()));
               },
             ),
           ],
@@ -211,15 +231,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: categories.map((cat) => categoryButton(cat['name'])).toList(),
+                    children: categories
+                        .map((cat) => categoryButton(cat['name']))
+                        .toList(),
                   ),
                   const SizedBox(height: 20),
-                  Text(isFilipino ? "Pinaka Sikat" : "Most Popular", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(isFilipino ? "Pinaka Sikat" : "Most Popular",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Expanded(
                     child: GridView.builder(
                       itemCount: allProducts.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.7,
                         crossAxisSpacing: 12,
