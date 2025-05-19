@@ -59,9 +59,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       final categories = await CategoryService.getCategories();
       setState(() {
         _categories = categories;
-        _selectedCategoryId = categories.isNotEmpty
-            ? categories.first['id'].toString()
-            : null;
+        _selectedCategoryId =
+            categories.isNotEmpty ? categories.first['id'].toString() : null;
       });
     } catch (e) {
       // Handle error here
@@ -136,7 +135,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                   _buildLabeledField(
                     isFilipino ? "Pangalan ng Produkto" : "Product Name",
                     _nameController,
-                    isFilipino ? "Ilagay ang pangalan ng produkto" : "Enter product name",
+                    isFilipino
+                        ? "Ilagay ang pangalan ng produkto"
+                        : "Enter product name",
                   ),
                   const SizedBox(height: 15),
                   _buildLabeledField(
@@ -154,7 +155,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedCategoryId,
                     isExpanded: true,
-                    decoration: const InputDecoration(border: OutlineInputBorder()),
+                    decoration:
+                        const InputDecoration(border: OutlineInputBorder()),
                     items: _categories.map((cat) {
                       return DropdownMenuItem<String>(
                         value: cat['id'].toString(),
@@ -206,7 +208,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     );
   }
 
-  Widget _buildLabeledField(String label, TextEditingController controller, String hint,
+  Widget _buildLabeledField(
+      String label, TextEditingController controller, String hint,
       {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,8 +241,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         _selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              isFilipino ? "Pakitapos ang lahat ng fields." : "Please complete all fields."),
+          content: Text(isFilipino
+              ? "Pakitapos ang lahat ng fields."
+              : "Please complete all fields."),
         ),
       );
       return;
@@ -265,6 +269,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         image: _selectedImage,
       );
 
+      if (!mounted) return;
+
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -277,6 +283,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         throw Exception("Server error");
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(isFilipino

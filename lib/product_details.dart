@@ -1,249 +1,327 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'product.dart';
-import 'app_state.dart';
 import 'home_screen.dart';
+import 'package:provider/provider.dart';
 import 'config.dart';
+import 'app_state.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'category_product_screen.dart';
 
-
-// Product Image Widget
-class ProductImage extends StatelessWidget {
-  final String image; // Product image path
-  const ProductImage({required this.image, super.key});
+class ProductDetailsScreen extends StatefulWidget {
+  final Map<String, dynamic> product;
+  const ProductDetailsScreen({super.key, required this.product});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 300, // Image container height
-      decoration: BoxDecoration(
-        color: Colors.pink[100], // Background color
-        image: DecorationImage(
-          image: AssetImage(image), // Load image from assets
-          fit: BoxFit.contain, // Fit inside container
-        ),
-      ),
-    );
-  }
+  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
 }
 
-// Product Info Widget
-class ProductInfo extends StatelessWidget {
-  final Product product; // Product data
-  const ProductInfo({required this.product, super.key});
+class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  String? categoryName;
+  List<Map<String, dynamic>> relevantProducts = [];
+  bool loadingRelevant = true;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Add spacing
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align text to left
-        children: [
-          Row(
-            children: [
-              const Text("Nike", style: TextStyle(color: Colors.grey)), // Brand name
-              const SizedBox(width: 10), // Space between brand and rating
-              const Icon(Icons.star, color: Colors.orange, size: 16), // Star icon
-              Text(" ${product.rating} (${product.reviews})", style: const TextStyle(color: Colors.grey)), // Rating & reviews
-              const Spacer(), // Push favorite icon to the right
-              const Icon(Icons.favorite_border, color: Colors.black), // Favorite icon
-            ],
-          ),
-          const SizedBox(height: 5), // Space
-          Text(product.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), // Product name
-          Text(product.description, style: const TextStyle(color: Colors.grey)), // Product description
-          const SizedBox(height: 5), // Space
-          Text("₱${product.price}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Product price
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    fetchCategoryAndRelevant();
   }
-}
 
-// Category Selector Widget
-class CategorySelector extends StatelessWidget {
-  const CategorySelector({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Add spacing
-      child: Row(
-        children: ["Clothing", "Shoes", "Jewelry"]
-            .map((category) => Padding(
-                  padding: const EdgeInsets.only(right: 8), // Space between chips
-                  child: Chip(label: Text(category)), // Category chip
-                ))
-            .toList(),
-      ),
-    );
+  Future<void> fetchCategoryAndRelevant() async {
+    final catId = widget.product['category_id'];
+    if (catId != null) {
+      // Fetch category name
+      final catRes = await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
+      if (catRes.statusCode == 200) {
+        final cats = jsonDecode(catRes.body) as List;
+        final cat = cats.firstWhere((c) => c['id'].toString() == catId.toString(), orElse: () => null);
+        setState(() {
+          categoryName = cat != null ? cat['name'] : null;
+        });
+      }
+      // Fetch relevant products
+      final relRes = await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories/$catId/products?all=1'));
+      if (relRes.statusCode == 200) {
+        final relJson = jsonDecode(relRes.body);
+        final List<dynamic> relRaw = relJson['data'] ?? relJson;
+        setState(() {
+          relevantProducts = List<Map<String, dynamic>>.from(relRaw)
+              .where((p) => p['id'] != widget.product['id'])
+              .toList();
+          loadingRelevant = false;
+        });
+      } else {
+        setState(() {
+          loadingRelevant = false;
+        });
+      }
+    } else {
+      setState(() {
+        loadingRelevant = false;
+      });
+    }
   }
-}
-
-// Color Selector Widget
-class ColorSelector extends StatelessWidget {
-  const ColorSelector({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     final appState = Provider.of<AppState>(context);
-     final isFilipino = appState.language == AppLanguage.filipino;
+    final isFilipino = appState.language == AppLanguage.filipino;
+    final backgroundColor = getThemeData(appState.theme).appBarTheme.backgroundColor;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Add spacing
-      child: Row(
-        children: [
-         Text(isFilipino ? "Kulay  " : "Colors"), // Label
-          ...[Colors.blue, Colors.yellow, Colors.pink].map(
-            (color) => Container(
-              margin: const EdgeInsets.only(right: 8), // Space between colors
-              height: 30, width: 30, // Circle size
-              decoration: BoxDecoration(
-                color: color, // Color of the circle
-                shape: BoxShape.circle, // Make it circular
-                border: Border.all(color: Colors.black), // Black border
-              ),
-            ),
-          ),
-        ],
+    String imagePath;
+    if (widget.product["image_path"] != null) {
+      imagePath = '${AppConfig.baseUrl}/storage/${widget.product["image_path"]}';
+    } else if (widget.product["image"] != null) {
+      imagePath = widget.product["image"].toString();
+    } else {
+      imagePath = 'https://via.placeholder.com/130';
+    }
+
+    Widget imageWidget = Image.network(
+      imagePath,
+      height: 350,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Container(
+        height: 200,
+        width: double.infinity,
+        color: Colors.grey,
+        child: Icon(Icons.broken_image, size: 50),
       ),
     );
-  }
-}
-
-// Size Selector Widget
-class SizeSelector extends StatelessWidget {
-  const SizeSelector({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    
-     final appState = Provider.of<AppState>(context);
-     final isFilipino = appState.language == AppLanguage.filipino;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Add spacing
-      child: Row(
-        children: [
-          Text(isFilipino ? "Laki  " : "Size  "), // Label
-          ...["S", "M", "L"].map(
-            (size) => Padding(
-              padding: const EdgeInsets.only(right: 8), // Space between sizes
-              child: Chip(label: Text(size)), // Size chip
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Action Buttons Widget
-class ActionButtons extends StatelessWidget {
-  const ActionButtons({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    
-     final appState = Provider.of<AppState>(context);
-     final isFilipino = appState.language == AppLanguage.filipino;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // Add spacing
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: null, // Disabled for now
-              icon: const Icon(Icons.shopping_cart, color: Colors.black), // Cart icon
-              label: Text(
-              isFilipino ? "IDAGDAG SA CART" : "ADD TO CART",
-              style: const TextStyle(color: Colors.black),
-            ), // Button text
-              style: ElevatedButton.styleFrom(
-                disabledBackgroundColor: Color.fromRGBO(251, 248, 204, 1.0), // Explicitly set disabled color
-                padding: const EdgeInsets.all(12), // Padding inside button
-              ),
-            ),
-          ),
-          const SizedBox(width: 10), // Space between buttons
-          Expanded(
-            child: ElevatedButton(
-              onPressed: null, // Disabled for now
-              child: Text(
-              isFilipino ? "BILHIN NGAYON" : "BUY NOW",
-              style: const TextStyle(color: Colors.white),
-            ), // Button text
-              style: ElevatedButton.styleFrom(
-                disabledBackgroundColor: Color.fromRGBO(240, 112, 152, 1.0), // Explicitly set disabled color
-                padding: const EdgeInsets.all(12), // Padding inside button
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Detail Screen
-class DetailScreen extends StatelessWidget {
-  final Product product; // Product data
-  const DetailScreen({required this.product, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-
-     final appState = Provider.of<AppState>(context);
-     final isFilipino = appState.language == AppLanguage.filipino;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.pink[100], // App bar color
-        elevation: 0, // Remove shadow
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        title: Text(isFilipino ? "Pangalan ng produkto" : "Product Name",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black), // Back button
-          onPressed: () => Navigator.pop(context), // Go back
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
-       title: Text(isFilipino ? "Detalye ng Produkto" : "Detail Product",
-        style: const TextStyle(color: Colors.black)),
-        // Title
-        centerTitle: true, // Center title
-      ),
-      body: Column(
-        children: [
-          ProductImage(image: product.image), // Show product image
-          ProductInfo(product: product), // Show product details
-          const CategorySelector(), // Category selector
-          const ColorSelector(), // Color selector
-          const SizeSelector(), // Size selector
-          const ActionButtons(), // Action buttons
+        actions: [
+          Icon(Icons.chat_bubble_outline, color: Colors.black),
+          SizedBox(width: 15),
+          Icon(Icons.shopping_cart_outlined, color: Colors.black),
+          SizedBox(width: 15),
+          CircleAvatar(
+            backgroundImage: AssetImage("assets/profile.jpg"),
+            radius: 15,
+          ),
+          SizedBox(width: 15),
         ],
       ),
-    );
-  }
-}
-
-// Main App
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false, // Remove debug banner
-      home: DetailScreen(
-        product: Product(
-          name: "Nike Strike+", // Product name
-          description: "Men's Water-Repellent Hooded Football Jacket", // Product description
-          image: "assets/jacket.png", // Product image path
-          price: 4295, // Product price
-          rating: 4.9, // Product rating
-          reviews: 590, // Number of reviews
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            imageWidget,
+            SizedBox(height: 10),
+            Text(widget.product["name"].toString(),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                    widget.product["price"] != null
+                        ? widget.product["price"].toString()
+                        : '',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.orange, size: 18),
+                    Text(" 4.5 "),
+                    Text(isFilipino ? "(99 pagsusuri)" : "(99 reviews)", style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Text(isFilipino ? "Paglalarawan" : "Description",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            SizedBox(height: 5),
+            Text(
+                widget.product["description"] != null
+                    ? widget.product["description"].toString()
+                    : '',
+                textAlign: TextAlign.justify,
+                style: TextStyle(color: Colors.grey)),
+            SizedBox(height: 15),
+            Text(isFilipino ? "Kategorya" : "Category",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            SizedBox(height: 5),
+            categoryName != null
+                ? GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CategoryProductsScreen(
+                            initialCategoryId: widget.product['category_id'],
+                            initialCategoryName: categoryName!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      categoryName!,
+                      style: TextStyle(
+                        color: const Color.fromRGBO(0, 150, 136, 1),
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : SizedBox(height: 16, child: LinearProgressIndicator()),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(isFilipino ? "Mga Komento" : "Reviews",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text(isFilipino ? "Ipakita lahal >" : "See all >",
+                    style: TextStyle(color: Colors.blue, fontSize: 14)),
+              ],
+            ),
+            SizedBox(height: 10),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("4.5/5", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(isFilipino ? "(99 pagsusuri)" : "(99 reviews)", style: TextStyle(color: Colors.grey)),
+                  SizedBox(height: 5),
+                  Row(
+                    children: List.generate(
+                        5,
+                        (index) => Icon(
+                            index < 4 ? Icons.star : Icons.star_half,
+                            color: const Color.fromRGBO(255, 152, 0, 1))),
+                  ),
+                  SizedBox(height: 10),
+                  ...List.generate(5, (index) {
+                    return Row(
+                      children: [
+                        Text("${5 - index}", style: TextStyle(fontWeight: FontWeight.bold)),
+                        SizedBox(width: 5),
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: (80 - (index * 20)) / 100,
+                            backgroundColor: Colors.grey[300],
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text("${(80 - (index * 20)) ~/ 20}", style: TextStyle(color: Colors.grey))
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ),
+            SizedBox(height: 15),
+            Row(
+              children: [
+                CircleAvatar(backgroundImage: AssetImage("assets/user1.jpg")),
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Rovi T.", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text("Occaecat laboris cupidatat dolo", style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                CircleAvatar(backgroundImage: AssetImage("assets/user2.jpg")),
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Sean S.", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text("Occaecat laboris cupidatat dolo", style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                    isFilipino ? "Mga kaugnay na produkto" : "Relevant products",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text(isFilipino ? "Ipakita lahal" : "See all >",
+                    style: TextStyle(color: Colors.blue, fontSize: 14)),
+              ],
+            ),
+            SizedBox(height: 10),
+            SizedBox(
+              height: 240,
+              child: loadingRelevant
+                  ? Center(child: CircularProgressIndicator())
+                  : relevantProducts.isEmpty
+                      ? Center(child: Text(isFilipino ? "Walang kaugnay na produkto" : "No relevant products"))
+                      : ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: relevantProducts.length,
+                          separatorBuilder: (_, __) => SizedBox(width: 10),
+                          itemBuilder: (context, idx) {
+                            final prod = relevantProducts[idx];
+                            final hasImage = prod['image_path'] != null && prod['image_path'].toString().isNotEmpty;
+                            final img = hasImage
+                                ? Image.network(
+                                    '${AppConfig.baseUrl}/storage/${prod['image_path']}',
+                                    height: 180,
+                                    width: 140,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Image.asset('assets/product_placeholder.png', height: 180, width: 140, fit: BoxFit.cover),
+                                  )
+                                : Image.asset('assets/product_placeholder.png', height: 180, width: 140, fit: BoxFit.cover);
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ProductDetailsScreen(product: prod),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 150,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: img,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(prod['name'] ?? '',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis),
+                                    Text(
+                                      prod['price'] != null ? '₱${prod['price']}' : '',
+                                      style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
         ),
       ),
     );

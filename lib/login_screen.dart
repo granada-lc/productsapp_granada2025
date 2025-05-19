@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:productapp_granada2025/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'app_state.dart';
+import 'config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/auth/login'),
+        Uri.parse('${AppConfig.baseUrl}/api/auth/login'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           'username': _usernameController.text,
@@ -45,23 +48,35 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final userId = responseData['user']['id'];
+        final username = responseData['user']['username'];
+        final email = responseData['user']['email'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('user_id', userId);
+        await prefs.setString('user_name', username ?? 'User Name');
+        await prefs.setString('user_email', email ?? 'user@example.com');
+
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/home');
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isFilipino
-                ? "Maling kredensyal."
-                : "Invalid credentials."),
+            content: Text(
+                isFilipino ? "Maling kredensyal." : "Invalid credentials."),
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFilipino
-              ? "May problema sa koneksyon."
-              : "Connection error."),
+          content: Text(
+              isFilipino ? "May problema sa koneksyon." : "Connection error."),
         ),
       );
     } finally {
@@ -77,9 +92,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final loginText = isFilipino ? "MAG-LOGIN" : "LOGIN";
     final usernameHint = isFilipino ? "Pangalan ng Gumagamit" : "Username";
     final passwordHint = isFilipino ? "Password" : "Password";
-    final forgotPassword = isFilipino ? "Nakalimutan ang Password?" : "Forgot Password?";
+    final forgotPassword =
+        isFilipino ? "Nakalimutan ang Password?" : "Forgot Password?";
     final loginButton = isFilipino ? "MAG-LOGIN" : "LOGIN";
-    final noAccount = isFilipino ? "Wala ka pang account? " : "Don't have an account? ";
+    final noAccount =
+        isFilipino ? "Wala ka pang account? " : "Don't have an account? ";
     final signUpText = isFilipino ? "Mag-sign Up" : "Sign Up";
 
     return Scaffold(
@@ -123,7 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 filled: true,
                 fillColor: Colors.white,
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _obscureText = !_obscureText;
@@ -138,7 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {},
-                child: Text(forgotPassword, style: const TextStyle(color: Colors.blue)),
+                child: Text(forgotPassword,
+                    style: const TextStyle(color: Colors.blue)),
               ),
             ),
             const SizedBox(height: 10),
@@ -158,7 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
                         loginButton,
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 18),
                       ),
               ),
             ),
@@ -174,7 +194,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: Text(
                     signUpText,
-                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
