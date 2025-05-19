@@ -200,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (_) => CreateProductScreen()));
+<<<<<<< HEAD
               },
             ),
             ListTile(
@@ -220,6 +221,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? "Walang naka-log in na user."
                           : "No user logged in.")));
                 }
+=======
+>>>>>>> 6d5d43bbb9a3f10ee653b35a9b36247384577635
               },
             ),
             ListTile(
