@@ -12,7 +12,7 @@ import 'config.dart';
 import 'app_state.dart';
 
 class CreateProductScreen extends StatefulWidget {
-  const CreateProductScreen({super.key});
+  const CreateProductScreen({super.key});    
 
   @override
   State<CreateProductScreen> createState() => _CreateProductScreenState();
