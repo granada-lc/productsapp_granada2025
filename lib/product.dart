@@ -7,6 +7,7 @@ class Product {
   final double rating;
   final int reviews;
   final String? imagePath; // Use this for API data
+  final int? categoryId; // <-- Add this line
 
   // Constructor for local data
   Product({
@@ -18,6 +19,7 @@ class Product {
     required this.rating,
     required this.reviews,
     this.imagePath,
+    this.categoryId, // <-- Add this line
   });
 
   // Factory method to create a Product from JSON
@@ -26,13 +28,27 @@ class Product {
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      image: json['image_path'] ?? '', // Fallback to an empty string if not present
+      image: json['image_path'] ??
+          '', // Fallback to an empty string if not present
       price: double.parse(json['price'].toString()),
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviews: json['reviews'] ?? 0,
       imagePath: json['image_path'],
-      
+      categoryId: json['category_id'], // <-- Add this line
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'image_path': imagePath ?? image,
+      'price': price,
+      'rating': rating,
+      'reviews': reviews,
+      'category_id': categoryId, // <-- Add this line
+    };
   }
 }
 

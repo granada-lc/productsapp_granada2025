@@ -25,29 +25,36 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }
 
   Future<void> _fetchProducts() async {
-    final response = await http
-        .get(Uri.parse('${AppConfig.baseUrl}/api/products/${widget.userId}'));
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
+    if (!mounted) return; // ✅ check if still mounted
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
-      // If the response is a single product, wrap it in a list
-      final List<dynamic> data =
-          body is Map && body['data'] != null ? body['data'] : [body];
-      setState(() {
-        _products = data.map((item) => Product.fromJson(item)).toList();
-      });
+      final List<dynamic> data = body['data'] ?? [];
+      if (mounted) {
+        setState(() {
+          _products = data
+              .where((item) => item['user_id'] == widget.userId)
+              .map((item) => Product.fromJson(item))
+              .toList();
+        });
+      }
     } else {
-      // Handle error
+      //TODO: Handle error
     }
   }
 
   Future<void> _deleteProduct(int id) async {
     final response =
         await http.delete(Uri.parse('${AppConfig.baseUrl}/api/products/$id'));
+    if (!mounted) return; // ✅ check if still mounted
     if (response.statusCode == 200) {
-      setState(() {
-        _products.removeWhere((product) => product.id == id);
-        _selectedProductIds.remove(id);
-      });
+      if (mounted) {
+        setState(() {
+          _products.removeWhere((product) => product.id == id);
+          _selectedProductIds.remove(id);
+        });
+      }
     } else {
       // Handle error
     }
