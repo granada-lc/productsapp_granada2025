@@ -12,6 +12,7 @@ import 'product.dart'; // Ensure this imports your Product model
 import 'create_product_screen.dart';
 import 'user_preference.dart';
 import 'editproduct_screen.dart';
+import 'category_product_screen.dart';
 import 'app_state.dart';
 import 'package:productapp_granada2025/models/Products.dart' as ModelProducts;
 
@@ -104,10 +105,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Widget categoryButton(String title) {
-    return Chip(
-      label: Text(title, style: const TextStyle(fontSize: 14)),
-      backgroundColor: Colors.orange[100],
+  Widget categoryButton(Map<String, dynamic> category) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryProductsScreen(
+              initialCategoryId: category['id'],
+              initialCategoryName: category['name'], 
+            ),
+          ),
+        );
+      },
+      child: Chip(
+        label: Text(category['name'], style: const TextStyle(fontSize: 14)),
+        backgroundColor: Colors.orange[100],
+      ),
     );
   }
 
