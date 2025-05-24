@@ -12,6 +12,7 @@ import 'product.dart'; // Ensure this imports your Product model
 import 'create_product_screen.dart';
 import 'user_preference.dart';
 import 'editproduct_screen.dart';
+import 'category_product_screen.dart';
 import 'app_state.dart';
 import 'package:productapp_granada2025/models/Products.dart' as ModelProducts;
 import 'category_product_screen.dart';
