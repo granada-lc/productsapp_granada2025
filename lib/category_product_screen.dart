@@ -102,19 +102,12 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     },
                   ),
                 ),
-                // Products grid/list
+                // Products list
                 Expanded(
                   child: products.isEmpty
                       ? Center(child: Text("No products found."))
-                      : GridView.builder(
+                      : ListView.builder(
                           padding: EdgeInsets.all(8),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                            childAspectRatio: 0.7,
-                          ),
                           itemCount: products.length,
                           itemBuilder: (context, index) {
                             final product = products[index];
@@ -123,20 +116,38 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                             final imageWidget = hasImage
                                 ? Image.network(
                                     '${AppConfig.baseUrl}/storage/${product['image_path']}',
-                                    height: 120,
-                                    width: double.infinity,
+                                    height: 80,
+                                    width: 80,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error,
                                             stackTrace) =>
                                         Image.asset(
                                             'assets/product_placeholder.png',
-                                            height: 120,
+                                            height: 80,
+                                            width: 80,
                                             fit: BoxFit.cover),
                                   )
                                 : Image.asset('assets/product_placeholder.png',
-                                    height: 120, fit: BoxFit.cover);
+                                    height: 80, width: 80, fit: BoxFit.cover);
                             return Card(
-                              child: InkWell(
+                              child: ListTile(
+                                leading: imageWidget,
+                                title: Text(product['name'] ?? '',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(product['description'] ?? '',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                    Text(
+                                        '₱${product['price']?.toString() ?? ''}',
+                                        style: TextStyle(
+                                            color: Colors.teal,
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -146,42 +157,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                                     ),
                                   );
                                 },
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    imageWidget,
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        product['name'] ?? '',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0),
-                                      child: Text(
-                                        product['description'] ?? '',
-                                        style: TextStyle(
-                                            fontSize: 12, color: Colors.grey),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        '₱${product['price']?.toString() ?? ''}',
-                                        style: TextStyle(
-                                            color: Colors.teal,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
                             );
                           },

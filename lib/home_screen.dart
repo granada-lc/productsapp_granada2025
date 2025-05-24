@@ -14,6 +14,7 @@ import 'user_preference.dart';
 import 'editproduct_screen.dart';
 import 'app_state.dart';
 import 'package:productapp_granada2025/models/Products.dart' as ModelProducts;
+import 'category_product_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,10 +105,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Widget categoryButton(String title) {
-    return Chip(
-      label: Text(title, style: const TextStyle(fontSize: 14)),
-      backgroundColor: Colors.orange[100],
+  Widget categoryButton(Map<String, dynamic> category) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CategoryProductsScreen(
+              initialCategoryId: category['id'],
+              initialCategoryName: category['name'],
+            ),
+          ),
+        );
+      },
+      child: Chip(
+        label: Text(category['name'], style: const TextStyle(fontSize: 14)),
+        backgroundColor: Colors.orange[100],
+      ),
     );
   }
 
@@ -251,11 +265,16 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: categories
-                        .map((cat) => categoryButton(cat['name']))
-                        .toList(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: categories
+                          .map((cat) => Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: categoryButton(cat),
+                              ))
+                          .toList(),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text(isFilipino ? "Pinaka Sikat" : "Most Popular",
