@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 enum AppTheme { roseBud, sandwisp }
+
 enum AppLanguage { english, filipino }
 
 class AppState extends ChangeNotifier {

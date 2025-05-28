@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
           MaterialPageRoute(
             builder: (context) => CategoryProductsScreen(
               initialCategoryId: category['id'],
-              initialCategoryName: category['name'], 
+              initialCategoryName: category['name'],
             ),
           ),
         );
@@ -197,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
-                      backgroundImage: AssetImage("assets/profile.jpg"),
+                      backgroundImage: AssetImage("assets/profile.png"),
                       radius: 30),
                   SizedBox(height: 10),
                   Text(userName ?? "User Name",
@@ -267,9 +267,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: categories
-                        .map((cat) => categoryButton(cat['name']))
-                        .toList(),
+                    children:
+                        categories.map((cat) => categoryButton(cat)).toList(),
                   ),
                   const SizedBox(height: 20),
                   Text(isFilipino ? "Pinaka Sikat" : "Most Popular",
